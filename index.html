@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salad Club Expenses</title>
+    <title>Salad Club Expenses & Contributions</title>
     <style>
         body {
             font-family: sans-serif;
@@ -13,30 +13,42 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px; /* Increased width to accommodate both tables */
             margin: 0 auto;
             background-color: #fff;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
         }
 
         h1, h2 {
-            color: #5cb85c; /* A nice green for salads! */
+            color: #5cb85c;
             text-align: center;
             margin-bottom: 20px;
+            width: 100%; /* Ensure headings span across both sections */
         }
 
-        .add-expense label {
+        .input-section, .data-section {
+            flex: 1 1 45%; /* Distribute space for input and data sections */
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .input-section label {
             display: inline-block;
             width: 120px;
             text-align: right;
             margin-right: 10px;
         }
 
-        .add-expense input[type="text"],
-        .add-expense input[type="number"],
-        .add-expense input[type="date"] {
+        .input-section input[type="text"],
+        .input-section input[type="number"],
+        .input-section input[type="date"] {
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -44,42 +56,39 @@
             margin-bottom: 10px;
         }
 
-        .add-expense button {
-            background-color: #5cb85c;
+        .input-section button {
+            background-color: #007bff; /* Blue for add contribution */
             color: white;
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-top: 10px;
         }
 
-        .add-expense button:hover {
-            background-color: #4cae4c;
+        .add-expense button {
+            background-color: #5cb85c; /* Green for add expense */
         }
 
-        .expenses-list ul {
-            list-style: none;
-            padding: 0;
+        .input-section button:hover {
+            opacity: 0.9;
         }
 
-        .expenses-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
 
-        .expenses-list li:last-child {
-            border-bottom: none;
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
 
-        .total-expenses {
-            margin-top: 20px;
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.2em;
+        th {
+            background-color: #f2f2f2;
         }
 
         .delete-btn {
@@ -90,94 +99,210 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
-            margin-left: 10px;
         }
 
         .delete-btn:hover {
             background-color: #c82333;
         }
+
+        .total {
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Salad Club Expense Tracker</h1>
+        <h1>Salad Club Finance</h1>
 
-        <div class="add-expense">
-            <h2>Add New Expense</h2>
+        <div class="input-section">
+            <h2>Add Contribution</h2>
+            <form id="contribution-form">
+                <label for="contributor">Contributor:</label>
+                <input type="text" id="contributor" required><br><br>
+                <label for="contribution-date">Date:</label>
+                <input type="date" id="contribution-date" required><br><br>
+                <label for="amount">Amount (₹):</label>
+                <input type="number" id="contribution-amount" min="0.01" step="0.01" required><br><br>
+                <button type="submit">Add Contribution</button>
+            </form>
+
+            <h2>Add Expense</h2>
             <form id="expense-form">
-                <label for="date">Date:</label>
-                <input type="date" id="date" required><br><br>
-
-                <label for="item">Item:</label>
-                <input type="text" id="item" required><br><br>
-
-                <label for="quantity">Quantity:</label>
-                <input type="number" id="quantity" min="0.01" step="0.01" required><br><br>
-
-                <label for="unit-price">Unit Price (₹):</label>
-                <input type="number" id="unit-price" min="0.01" step="0.01" required><br><br>
-
-                <button type="submit">Add Expense</button>
+                <label for="expense-date">Date:</label>
+                <input type="date" id="expense-date" required><br><br>
+                <label for="expense-item">Item:</label>
+                <input type="text" id="expense-item" required><br><br>
+                <label for="expense-quantity">Quantity:</label>
+                <input type="number" id="expense-quantity" min="0.01" step="0.01" required><br><br>
+                <label for="expense-unit-price">Unit Price (₹):</label>
+                <input type="number" id="expense-unit-price" min="0.01" step="0.01" required><br><br>
+                <button type="submit" class="add-expense">Add Expense</button>
             </form>
         </div>
 
-        <div class="expenses-list">
-            <h2>Expenses</h2>
-            <ul id="expenses">
-                </ul>
-        </div>
+        <div class="data-section">
+            <h2>Contributions</h2>
+            <table id="contributions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Contributor</th>
+                        <th>Amount (₹)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contributions-body">
+                </tbody>
+            </table>
+            <div class="total total-contributions">Total Contributions: <span id="total-contributions">₹0.00</span></div>
 
-        <div class="total-expenses">
-            <h2>Total Expenses: <span id="total">₹0.00</span></h2>
+            <h2>Expenses</h2>
+            <table id="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total Cost (₹)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-body">
+                </tbody>
+            </table>
+            <div class="total total-expenses">Total Expenses: <span id="total-expenses">₹0.00</span></div>
+
+            <div class="total total-balance">Balance: <span id="balance">₹0.00</span></div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const contributionForm = document.getElementById('contribution-form');
             const expenseForm = document.getElementById('expense-form');
-            const expensesList = document.getElementById('expenses');
-            const totalDisplay = document.getElementById('total');
+            const contributionsBody = document.getElementById('contributions-body');
+            const expensesBody = document.getElementById('expenses-body');
+            const totalContributionsDisplay = document.getElementById('total-contributions');
+            const totalExpensesDisplay = document.getElementById('total-expenses');
+            const balanceDisplay = document.getElementById('balance');
 
+            let contributions = loadContributions();
             let expenses = loadExpenses();
+
+            renderContributions();
             renderExpenses();
+            updateBalance();
+
+            contributionForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const contributor = document.getElementById('contributor').value;
+                const date = document.getElementById('contribution-date').value;
+                const amount = parseFloat(document.getElementById('contribution-amount').value);
+
+                const newContribution = { date, contributor, amount };
+                contributions.push(newContribution);
+                saveContributions();
+                renderContributions();
+                updateBalance();
+                contributionForm.reset();
+            });
 
             expenseForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const date = document.getElementById('date').value;
-                const item = document.getElementById('item').value;
-                const quantity = parseFloat(document.getElementById('quantity').value);
-                const unitPrice = parseFloat(document.getElementById('unit-price').value);
+                const date = document.getElementById('expense-date').value;
+                const item = document.getElementById('expense-item').value;
+                const quantity = parseFloat(document.getElementById('expense-quantity').value);
+                const unitPrice = parseFloat(document.getElementById('expense-unit-price').value);
                 const totalCost = quantity * unitPrice;
 
                 const newExpense = { date, item, quantity, unitPrice, totalCost };
                 expenses.push(newExpense);
                 saveExpenses();
                 renderExpenses();
+                updateBalance();
                 expenseForm.reset();
             });
 
-            function renderExpenses() {
-                expensesList.innerHTML = '';
-                let total = 0;
-                expenses.forEach((expense, index) => {
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <span>${expense.date} - ${expense.item} (${expense.quantity} x ₹${expense.unitPrice.toFixed(2)})</span>
-                        <span>₹${expense.totalCost.toFixed(2)} <button class="delete-btn" data-index="${index}">Delete</button></span>
-                    `;
-                    expensesList.appendChild(listItem);
-                    total += expense.totalCost;
-                });
-                totalDisplay.textContent = `₹${total.toFixed(2)}`;
+            function renderContributions() {
+                contributionsBody.innerHTML = '';
+                let totalContributions = 0;
+                contributions.forEach((contribution, index) => {
+                    const row = contributionsBody.insertRow();
+                    const dateCell = row.insertCell();
+                    const contributorCell = row.insertCell();
+                    const amountCell = row.insertCell();
+                    const actionsCell = row.insertCell();
 
-                // Add event listeners to delete buttons after rendering
-                const deleteButtons = document.querySelectorAll('.delete-btn');
-                deleteButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const indexToDelete = parseInt(this.dataset.index);
-                        deleteExpense(indexToDelete);
-                    });
+                    dateCell.textContent = contribution.date;
+                    contributorCell.textContent = contribution.contributor;
+                    amountCell.textContent = `₹${contribution.amount.toFixed(2)}`;
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.classList.add('delete-btn');
+                    deleteButton.dataset.index = index;
+                    deleteButton.addEventListener('click', () => deleteContribution(index));
+                    actionsCell.appendChild(deleteButton);
+
+                    totalContributions += contribution.amount;
                 });
+                totalContributionsDisplay.textContent = `₹${totalContributions.toFixed(2)}`;
+            }
+
+            function renderExpenses() {
+                expensesBody.innerHTML = '';
+                let totalExpenses = 0;
+                expenses.forEach((expense, index) => {
+                    const row = expensesBody.insertRow();
+                    const dateCell = row.insertCell();
+                    const itemCell = row.insertCell();
+                    const quantityCell = row.insertCell();
+                    const unitPriceCell = row.insertCell();
+                    const totalCostCell = row.insertCell();
+                    const actionsCell = row.insertCell();
+
+                    dateCell.textContent = expense.date;
+                    itemCell.textContent = expense.item;
+                    quantityCell.textContent = expense.quantity;
+                    unitPriceCell.textContent = `₹${expense.unitPrice.toFixed(2)}`;
+                    totalCostCell.textContent = `₹${expense.totalCost.toFixed(2)}`;
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.classList.add('delete-btn');
+                    deleteButton.dataset.index = index;
+                    deleteButton.addEventListener('click', () => deleteExpense(index));
+                    actionsCell.appendChild(deleteButton);
+
+                    totalExpenses += expense.totalCost;
+                });
+                totalExpensesDisplay.textContent = `₹${totalExpenses.toFixed(2)}`;
+            }
+
+            function updateBalance() {
+                const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
+                const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
+                const balance = totalContributions - totalExpenses;
+                balanceDisplay.textContent = `₹${balance.toFixed(2)}`;
+            }
+
+            function saveContributions() {
+                localStorage.setItem('saladClubContributions', JSON.stringify(contributions));
+            }
+
+            function loadContributions() {
+                const storedContributions = localStorage.getItem('saladClubContributions');
+                return storedContributions ? JSON.parse(storedContributions) : [];
+            }
+
+            function deleteContribution(index) {
+                contributions.splice(index, 1);
+                saveContributions();
+                renderContributions();
+                updateBalance();
             }
 
             function saveExpenses() {
@@ -193,6 +318,7 @@
                 expenses.splice(index, 1);
                 saveExpenses();
                 renderExpenses();
+                updateBalance();
             }
         });
     </script>
