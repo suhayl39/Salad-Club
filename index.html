@@ -1,154 +1,239 @@
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const contributionForm = document.getElementById('contribution-form');
-        const contributionsBody = document.getElementById('contributions-body');
-        const expensesBody = document.getElementById('expenses-body');
-        const totalContributionsDisplay = document.getElementById('total-contributions');
-        const totalExpensesDisplay = document.getElementById('total-expenses');
-        const balanceDisplay = document.getElementById('balance');
-
-        const multiExpenseBody = document.getElementById('multi-expense-body');
-        const addRowBtn = document.getElementById('add-expense-row');
-        const submitAllBtn = document.getElementById('submit-all-expenses');
-
-        let contributions = loadContributions();
-        let expenses = loadExpenses();
-
-        setDefaultDates();
-        renderContributions();
-        renderExpenses();
-        updateBalance();
-
-        function setDefaultDates() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('contribution-date').value = today;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Club Fund Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { margin-top: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 90%; padding: 5px;
         }
+        .delete-btn { background: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        .add-btn, .submit-btn { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Club Fund Manager</h1>
 
-        contributionForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const contributor = document.getElementById('contributor').value;
-            const date = document.getElementById('contribution-date').value;
-            const amount = parseFloat(document.getElementById('contribution-amount').value);
+    <h2>Add Contribution</h2>
+    <form id="contribution-form">
+        <label>Date: <input type="date" id="contribution-date" required></label>
+        <label>Contributor: <input type="text" id="contributor" required></label>
+        <label>Amount: <input type="number" id="contribution-amount" min="0.01" step="0.01" required></label>
+        <button type="submit" class="submit-btn">Add Contribution</button>
+    </form>
 
-            const newContribution = { date, contributor, amount };
-            contributions.push(newContribution);
-            saveContributions();
-            renderContributions();
-            updateBalance();
-            contributionForm.reset();
+    <h2>Contributions</h2>
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Contributor</th><th>Amount</th><th>Action</th></tr>
+        </thead>
+        <tbody id="contributions-body"></tbody>
+    </table>
+    <p><strong>Total Contributions:</strong> <span id="total-contributions">₹0.00</span></p>
+
+    <h2>Add Multiple Expenses</h2>
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Action</th></tr>
+        </thead>
+        <tbody id="multi-expense-body"></tbody>
+    </table>
+    <button id="add-expense-row" class="add-btn">+ Add Expense Row</button>
+    <button id="submit-all-expenses" class="submit-btn">Submit All Expenses</button>
+
+    <h2>Expenses</h2>
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Action</th></tr>
+        </thead>
+        <tbody id="expenses-body"></tbody>
+    </table>
+    <p><strong>Total Expenses:</strong> <span id="total-expenses">₹0.00</span></p>
+
+    <h2>Balance</h2>
+    <p><strong>Remaining Balance:</strong> <span id="balance">₹0.00</span></p>
+
+    <script>
+        const sheetURL = "https://script.google.com/macros/s/AKfycbxxxxxx.../exec"; // ✅ Replace with your Web App URL
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const contributionForm = document.getElementById('contribution-form');
+            const contributionsBody = document.getElementById('contributions-body');
+            const expensesBody = document.getElementById('expenses-body');
+            const totalContributionsDisplay = document.getElementById('total-contributions');
+            const totalExpensesDisplay = document.getElementById('total-expenses');
+            const balanceDisplay = document.getElementById('balance');
+            const multiExpenseBody = document.getElementById('multi-expense-body');
+            const addRowBtn = document.getElementById('add-expense-row');
+            const submitAllBtn = document.getElementById('submit-all-expenses');
+
+            let contributions = loadContributions();
+            let expenses = loadExpenses();
+
             setDefaultDates();
-        });
-
-        addRowBtn.addEventListener('click', () => {
-            const today = new Date().toISOString().split('T')[0];
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="date" value="${today}" required></td>
-                <td><input type="text" required></td>
-                <td><input type="number" min="0.01" step="0.01" required></td>
-                <td><input type="number" min="0.01" step="0.01" required></td>
-                <td><button class="delete-btn remove-row">Delete</button></td>
-            `;
-            multiExpenseBody.appendChild(row);
-        });
-
-        multiExpenseBody.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-row')) {
-                e.target.closest('tr').remove();
-            }
-        });
-
-        submitAllBtn.addEventListener('click', () => {
-            const rows = multiExpenseBody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('input');
-                const date = cells[0].value;
-                const item = cells[1].value;
-                const quantity = parseFloat(cells[2].value);
-                const unitPrice = parseFloat(cells[3].value);
-                if (!date || !item || isNaN(quantity) || isNaN(unitPrice)) return;
-                const totalCost = quantity * unitPrice;
-                const newExpense = { date, item, quantity, unitPrice, totalCost };
-                expenses.push(newExpense);
-            });
-
-            saveExpenses();
-            renderExpenses();
-            updateBalance();
-            multiExpenseBody.innerHTML = '';
-        });
-
-        function renderContributions() {
-            contributionsBody.innerHTML = '';
-            let total = 0;
-            contributions.forEach((c, i) => {
-                const row = contributionsBody.insertRow();
-                row.innerHTML = `
-                    <td>${c.date}</td>
-                    <td>${c.contributor}</td>
-                    <td>₹${c.amount.toFixed(2)}</td>
-                    <td><button class="delete-btn" onclick="deleteContribution(${i})">Delete</button></td>
-                `;
-                total += c.amount;
-            });
-            totalContributionsDisplay.textContent = `₹${total.toFixed(2)}`;
-        }
-
-        function renderExpenses() {
-            expensesBody.innerHTML = '';
-            let total = 0;
-            expenses.forEach((e, i) => {
-                const row = expensesBody.insertRow();
-                row.innerHTML = `
-                    <td>${e.date}</td>
-                    <td>${e.item}</td>
-                    <td>${e.quantity}</td>
-                    <td>₹${e.unitPrice.toFixed(2)}</td>
-                    <td>₹${e.totalCost.toFixed(2)}</td>
-                    <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
-                `;
-                total += e.totalCost;
-            });
-            totalExpensesDisplay.textContent = `₹${total.toFixed(2)}`;
-        }
-
-        function updateBalance() {
-            const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
-            const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
-            const balance = totalContributions - totalExpenses;
-            balanceDisplay.textContent = `₹${balance.toFixed(2)}`;
-        }
-
-        function saveContributions() {
-            localStorage.setItem('saladClubContributions', JSON.stringify(contributions));
-        }
-
-        function loadContributions() {
-            const stored = localStorage.getItem('saladClubContributions');
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        function saveExpenses() {
-            localStorage.setItem('saladClubExpenses', JSON.stringify(expenses));
-        }
-
-        function loadExpenses() {
-            const stored = localStorage.getItem('saladClubExpenses');
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        window.deleteContribution = function(index) {
-            contributions.splice(index, 1);
-            saveContributions();
             renderContributions();
-            updateBalance();
-        }
-
-        window.deleteExpense = function(index) {
-            expenses.splice(index, 1);
-            saveExpenses();
             renderExpenses();
             updateBalance();
-        }
-    });
-</script>
+
+            function setDefaultDates() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('contribution-date').value = today;
+            }
+
+            contributionForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const contributor = document.getElementById('contributor').value;
+                const date = document.getElementById('contribution-date').value;
+                const amount = parseFloat(document.getElementById('contribution-amount').value);
+                const newContribution = { date, contributor, amount };
+
+                contributions.push(newContribution);
+                saveContributions();
+                renderContributions();
+                updateBalance();
+                contributionForm.reset();
+                setDefaultDates();
+
+                sendToSheet([newContribution]);
+            });
+
+            addRowBtn.addEventListener('click', () => {
+                const today = new Date().toISOString().split('T')[0];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="date" value="${today}" required></td>
+                    <td><input type="text" required></td>
+                    <td><input type="number" min="0.01" step="0.01" required></td>
+                    <td><input type="number" min="0.01" step="0.01" required></td>
+                    <td><button class="delete-btn remove-row">Delete</button></td>
+                `;
+                multiExpenseBody.appendChild(row);
+            });
+
+            multiExpenseBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-row')) {
+                    e.target.closest('tr').remove();
+                }
+            });
+
+            submitAllBtn.addEventListener('click', () => {
+                const rows = multiExpenseBody.querySelectorAll('tr');
+                const newExpenses = [];
+
+                rows.forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    const date = inputs[0].value;
+                    const item = inputs[1].value;
+                    const quantity = parseFloat(inputs[2].value);
+                    const unitPrice = parseFloat(inputs[3].value);
+
+                    if (!date || !item || isNaN(quantity) || isNaN(unitPrice)) return;
+
+                    const totalCost = quantity * unitPrice;
+                    const newExpense = { date, item, quantity, unitPrice, totalCost };
+                    expenses.push(newExpense);
+                    newExpenses.push(newExpense);
+                });
+
+                saveExpenses();
+                renderExpenses();
+                updateBalance();
+                multiExpenseBody.innerHTML = '';
+
+                sendToSheet(newExpenses);
+            });
+
+            function renderContributions() {
+                contributionsBody.innerHTML = '';
+                let total = 0;
+                contributions.forEach((c, i) => {
+                    const row = contributionsBody.insertRow();
+                    row.innerHTML = `
+                        <td>${c.date}</td>
+                        <td>${c.contributor}</td>
+                        <td>₹${c.amount.toFixed(2)}</td>
+                        <td><button class="delete-btn" onclick="deleteContribution(${i})">Delete</button></td>
+                    `;
+                    total += c.amount;
+                });
+                totalContributionsDisplay.textContent = `₹${total.toFixed(2)}`;
+            }
+
+            function renderExpenses() {
+                expensesBody.innerHTML = '';
+                let total = 0;
+                expenses.forEach((e, i) => {
+                    const row = expensesBody.insertRow();
+                    row.innerHTML = `
+                        <td>${e.date}</td>
+                        <td>${e.item}</td>
+                        <td>${e.quantity}</td>
+                        <td>₹${e.unitPrice.toFixed(2)}</td>
+                        <td>₹${e.totalCost.toFixed(2)}</td>
+                        <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
+                    `;
+                    total += e.totalCost;
+                });
+                totalExpensesDisplay.textContent = `₹${total.toFixed(2)}`;
+            }
+
+            function updateBalance() {
+                const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
+                const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
+                const balance = totalContributions - totalExpenses;
+                balanceDisplay.textContent = `₹${balance.toFixed(2)}`;
+            }
+
+            function saveContributions() {
+                localStorage.setItem('clubContributions', JSON.stringify(contributions));
+            }
+
+            function loadContributions() {
+                const stored = localStorage.getItem('clubContributions');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            function saveExpenses() {
+                localStorage.setItem('clubExpenses', JSON.stringify(expenses));
+            }
+
+            function loadExpenses() {
+                const stored = localStorage.getItem('clubExpenses');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            function sendToSheet(dataArray) {
+                fetch(sheetURL, {
+                    method: 'POST',
+                    body: JSON.stringify(dataArray),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.text())
+                .then(msg => console.log("Sheet response:", msg))
+                .catch(err => console.error("Sheet error:", err));
+            }
+
+            window.deleteContribution = function(index) {
+                contributions.splice(index, 1);
+                saveContributions();
+                renderContributions();
+                updateBalance();
+            };
+
+            window.deleteExpense = function(index) {
+                expenses.splice(index, 1);
+                saveExpenses();
+                renderExpenses();
+                updateBalance();
+            };
+        });
+    </script>
+</body>
+</html>
