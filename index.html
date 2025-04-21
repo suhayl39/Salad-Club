@@ -1,309 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Club Fund Manager</title>
-    <style>
-        :root {
-            --primary: #4cafaa;
-            --secondary: #f0f8f8;
-            --accent: #dff6f0;
-            --danger: #ff4d4d;
-            --text-dark: #333;
-            --text-light: #fff;
-            --border-color: #ccc;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f6fdfc;
-            color: var(--text-dark);
-            padding: 20px;
-            max-width: 1000px;
-            margin: auto;
-        }
-
-        h1, h2 {
-            color: var(--primary);
-        }
-
-        label {
-            display: inline-block;
-            margin: 5px 15px 10px 0;
-        }
-
-        input[type="text"], input[type="number"], input[type="date"] {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            outline: none;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background-color: var(--secondary);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: var(--primary);
-            color: var(--text-light);
-        }
-
-        tr:hover {
-            background-color: var(--accent);
-        }
-
-        .delete-btn {
-            background: var(--danger);
-            color: var(--text-light);
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .add-btn, .submit-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin-top: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .add-btn:hover, .submit-btn:hover {
-            background-color: #3a9a96;
-        }
-
-        .summary {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #222;
-        }
-
-        @media (max-width: 600px) {
-            table, thead, tbody, th, td, tr {
-                font-size: 14px;
-            }
-
-            input, button {
-                font-size: 14px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Salad Club Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #00796b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: #00796b;
+      color: white;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background: #00796b;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004d40;
+    }
+    .section {
+      margin-bottom: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-    <h1>Club Fund Manager</h1>
 
-    <h2>Add Contribution</h2>
+  <h2>Salad Club - Contributions & Expenses</h2>
+
+  <div class="section">
+    <h3>Add Contribution</h3>
     <form id="contribution-form">
-        <label>Date: <input type="date" id="contribution-date" required></label>
-        <label>Contributor: <input type="text" id="contributor" required></label>
-        <label>Amount: <input type="number" id="contribution-amount" min="0.01" step="0.01" required></label>
-        <button type="submit" class="submit-btn">Add Contribution</button>
+      <input type="date" id="contribution-date" required>
+      <input type="text" id="contributor" placeholder="Name" required>
+      <input type="number" id="contribution-amount" placeholder="Amount" required step="0.01">
+      <button type="submit">Add Contribution</button>
     </form>
+  </div>
 
-    <h2>Contributions</h2>
+  <div class="section">
+    <h3>Add Expense</h3>
+    <button id="add-expense-row">+ Add Expense Row</button>
     <table>
-        <thead>
-            <tr><th>Date</th><th>Contributor</th><th>Amount</th><th>Action</th></tr>
-        </thead>
-        <tbody id="contributions-body"></tbody>
+      <thead>
+        <tr>
+          <th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Delete</th>
+        </tr>
+      </thead>
+      <tbody id="multi-expense-body"></tbody>
     </table>
-    <p class="summary"><strong>Total Contributions:</strong> <span id="total-contributions">₹0.00</span></p>
+    <button id="submit-all-expenses">Submit Expenses</button>
+  </div>
 
-    <h2>Add Multiple Expenses</h2>
+  <div class="section">
+    <h3>Contributions</h3>
     <table>
-        <thead>
-            <tr><th>Date</th><th>Item</th><th>Quantity</th><th>Unit Price</th><th>Action</th></tr>
-        </thead>
-        <tbody id="multi-expense-body"></tbody>
+      <thead><tr><th>Date</th><th>Name</th><th>Amount</th><th>Delete</th></tr></thead>
+      <tbody id="contributions-body"></tbody>
     </table>
-    <button id="add-expense-row" class="add-btn">+ Add Expense Row</button>
-    <button id="submit-all-expenses" class="submit-btn">Submit All Expenses</button>
+    <strong>Total: <span id="total-contributions">₹0.00</span></strong>
+  </div>
 
-    <h2>Expenses</h2>
+  <div class="section">
+    <h3>Expenses</h3>
     <table>
-        <thead>
-            <tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Action</th></tr>
-        </thead>
-        <tbody id="expenses-body"></tbody>
+      <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Delete</th></tr></thead>
+      <tbody id="expenses-body"></tbody>
     </table>
-    <p class="summary"><strong>Total Expenses:</strong> <span id="total-expenses">₹0.00</span></p>
+    <strong>Total: <span id="total-expenses">₹0.00</span></strong>
+  </div>
 
-    <h2>Balance</h2>
-    <p class="summary"><strong>Remaining Balance:</strong> <span id="balance">₹0.00</span></p>
+  <div class="section">
+    <h3>Balance</h3>
+    <strong><span id="balance">₹0.00</span></strong>
+  </div>
 
-    <script>
-        https://script.google.com/macros/s/AKfycbwaF0UyIn6fiCTKViNA4MNc3BAmos1K6opsi9I8cGrGsyB1wzlYq8H6RtgGuqBf92Qy/exec // Replace with your live URL
+  <script>
+    const sheetURL = https://script.google.com/macros/s/AKfycbzYaTIBvXXo8kvLfoDOR-snJBgD9VR16g47v-wC8LI/dev; // Replace with your actual Google Apps Script URL
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const contributionsBody = document.getElementById('contributions-body');
-            const expensesBody = document.getElementById('expenses-body');
-            const totalContributionsDisplay = document.getElementById('total-contributions');
-            const totalExpensesDisplay = document.getElementById('total-expenses');
-            const balanceDisplay = document.getElementById('balance');
-            const multiExpenseBody = document.getElementById('multi-expense-body');
-            const contributionForm = document.getElementById('contribution-form');
+    const contributionForm = document.getElementById('contribution-form');
+    const contributionsBody = document.getElementById('contributions-body');
+    const expensesBody = document.getElementById('expenses-body');
+    const totalContributionsDisplay = document.getElementById('total-contributions');
+    const totalExpensesDisplay = document.getElementById('total-expenses');
+    const balanceDisplay = document.getElementById('balance');
 
-            let contributions = load('clubContributions');
-            let expenses = load('clubExpenses');
+    const multiExpenseBody = document.getElementById('multi-expense-body');
+    const addRowBtn = document.getElementById('add-expense-row');
+    const submitAllBtn = document.getElementById('submit-all-expenses');
 
-            renderContributions();
-            renderExpenses();
-            updateBalance();
-            setToday('contribution-date');
+    let contributions = JSON.parse(localStorage.getItem('saladContributions')) || [];
+    let expenses = JSON.parse(localStorage.getItem('saladExpenses')) || [];
 
-            contributionForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const contributor = document.getElementById('contributor').value;
-                const date = document.getElementById('contribution-date').value;
-                const amount = parseFloat(document.getElementById('contribution-amount').value);
+    document.addEventListener('DOMContentLoaded', () => {
+      setDefaultDates();
+      renderContributions();
+      renderExpenses();
+      updateBalance();
+    });
 
-                const newEntry = { date, contributor, amount };
-                contributions.push(newEntry);
-                save('clubContributions', contributions);
-                renderContributions();
-                updateBalance();
-                contributionForm.reset();
-                setToday('contribution-date');
-                sendToSheet([newEntry]);
-            });
+    function setDefaultDates() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('contribution-date').value = today;
+    }
 
-            document.getElementById('add-expense-row').addEventListener('click', () => {
-                const today = new Date().toISOString().split('T')[0];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><input type="date" value="${today}" required></td>
-                    <td><input type="text" required></td>
-                    <td><input type="number" min="0.01" step="0.01" required></td>
-                    <td><input type="number" min="0.01" step="0.01" required></td>
-                    <td><button class="delete-btn remove-row">Delete</button></td>
-                `;
-                multiExpenseBody.appendChild(row);
-            });
+    contributionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const contributor = document.getElementById('contributor').value;
+      const date = document.getElementById('contribution-date').value;
+      const amount = parseFloat(document.getElementById('contribution-amount').value);
+      const entry = { date, contributor, amount };
+      contributions.push(entry);
+      saveContributions();
+      renderContributions();
+      updateBalance();
+      sendToSheet([entry]);
+      contributionForm.reset();
+      setDefaultDates();
+    });
 
-            multiExpenseBody.addEventListener('click', (e) => {
-                if (e.target.classList.contains('remove-row')) {
-                    e.target.closest('tr').remove();
-                }
-            });
+    addRowBtn.addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0];
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="date" value="${today}" required></td>
+        <td><input type="text" required></td>
+        <td><input type="number" step="0.01" required></td>
+        <td><input type="number" step="0.01" required></td>
+        <td><button class="remove-row">Delete</button></td>
+      `;
+      multiExpenseBody.appendChild(row);
+    });
 
-            document.getElementById('submit-all-expenses').addEventListener('click', () => {
-                const rows = multiExpenseBody.querySelectorAll('tr');
-                const newExpenses = [];
+    multiExpenseBody.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-row')) {
+        e.target.closest('tr').remove();
+      }
+    });
 
-                rows.forEach(row => {
-                    const [dateInput, itemInput, qtyInput, unitPriceInput] = row.querySelectorAll('input');
-                    const date = dateInput.value;
-                    const item = itemInput.value;
-                    const quantity = parseFloat(qtyInput.value);
-                    const unitPrice = parseFloat(unitPriceInput.value);
+    submitAllBtn.addEventListener('click', () => {
+      const rows = multiExpenseBody.querySelectorAll('tr');
+      const newExpenses = [];
 
-                    if (!date || !item || isNaN(quantity) || isNaN(unitPrice)) return;
+      rows.forEach(row => {
+        const [dateInput, itemInput, qtyInput, priceInput] = row.querySelectorAll('input');
+        const date = dateInput.value;
+        const item = itemInput.value;
+        const quantity = parseFloat(qtyInput.value);
+        const unitPrice = parseFloat(priceInput.value);
+        const totalCost = quantity * unitPrice;
+        const expense = { date, item, quantity, unitPrice, totalCost };
+        expenses.push(expense);
+        newExpenses.push(expense);
+      });
 
-                    const totalCost = quantity * unitPrice;
-                    const entry = { date, item, quantity, unitPrice, totalCost };
-                    expenses.push(entry);
-                    newExpenses.push(entry);
-                });
+      saveExpenses();
+      renderExpenses();
+      updateBalance();
+      sendToSheet(newExpenses);
+      multiExpenseBody.innerHTML = '';
+    });
 
-                save('clubExpenses', expenses);
-                renderExpenses();
-                updateBalance();
-                multiExpenseBody.innerHTML = '';
-                sendToSheet(newExpenses);
-            });
+    function renderContributions() {
+      contributionsBody.innerHTML = '';
+      let total = 0;
+      contributions.forEach((c, i) => {
+        total += c.amount;
+        contributionsBody.innerHTML += `
+          <tr>
+            <td>${c.date}</td>
+            <td>${c.contributor}</td>
+            <td>₹${c.amount.toFixed(2)}</td>
+            <td><button onclick="deleteContribution(${i})">Delete</button></td>
+          </tr>
+        `;
+      });
+      totalContributionsDisplay.textContent = `₹${total.toFixed(2)}`;
+    }
 
-            function renderContributions() {
-                contributionsBody.innerHTML = '';
-                let total = 0;
-                contributions.forEach((c, i) => {
-                    const row = contributionsBody.insertRow();
-                    row.innerHTML = `
-                        <td>${c.date}</td>
-                        <td>${c.contributor}</td>
-                        <td>₹${c.amount.toFixed(2)}</td>
-                        <td><button class="delete-btn" onclick="deleteContribution(${i})">Delete</button></td>
-                    `;
-                    total += c.amount;
-                });
-                totalContributionsDisplay.textContent = `₹${total.toFixed(2)}`;
-            }
+    function renderExpenses() {
+      expensesBody.innerHTML = '';
+      let total = 0;
+      expenses.forEach((e, i) => {
+        total += e.totalCost;
+        expensesBody.innerHTML += `
+          <tr>
+            <td>${e.date}</td>
+            <td>${e.item}</td>
+            <td>${e.quantity}</td>
+            <td>₹${e.unitPrice.toFixed(2)}</td>
+            <td>₹${e.totalCost.toFixed(2)}</td>
+            <td><button onclick="deleteExpense(${i})">Delete</button></td>
+          </tr>
+        `;
+      });
+      totalExpensesDisplay.textContent = `₹${total.toFixed(2)}`;
+    }
 
-            function renderExpenses() {
-                expensesBody.innerHTML = '';
-                let total = 0;
-                expenses.forEach((e, i) => {
-                    const row = expensesBody.insertRow();
-                    row.innerHTML = `
-                        <td>${e.date}</td>
-                        <td>${e.item}</td>
-                        <td>${e.quantity}</td>
-                        <td>₹${e.unitPrice.toFixed(2)}</td>
-                        <td>₹${e.totalCost.toFixed(2)}</td>
-                        <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
-                    `;
-                    total += e.totalCost;
-                });
-                totalExpensesDisplay.textContent = `₹${total.toFixed(2)}`;
-            }
+    function updateBalance() {
+      const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
+      const balance = totalContributions - totalExpenses;
+      balanceDisplay.textContent = `₹${balance.toFixed(2)}`;
+    }
 
-            function updateBalance() {
-                const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
-                const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
-                balanceDisplay.textContent = `₹${(totalContributions - totalExpenses).toFixed(2)}`;
-            }
+    function saveContributions() {
+      localStorage.setItem('saladContributions', JSON.stringify(contributions));
+    }
 
-            function save(key, data) {
-                localStorage.setItem(key, JSON.stringify(data));
-            }
+    function saveExpenses() {
+      localStorage.setItem('saladExpenses', JSON.stringify(expenses));
+    }
 
-            function load(key) {
-                const saved = localStorage.getItem(key);
-                return saved ? JSON.parse(saved) : [];
-            }
+    function sendToSheet(data) {
+      fetch(sheetURL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      })
+      .then(response => response.text())
+      .then(res => console.log('Sheet response:', res))
+      .catch(err => console.error('Error sending to sheet:', err));
+    }
 
-            function sendToSheet() {
-  const contributions = JSON.stringify(contributionsData);
-  const expenses = JSON.stringify(expensesData);
+    window.deleteContribution = function(index) {
+      contributions.splice(index, 1);
+      saveContributions();
+      renderContributions();
+      updateBalance();
+    }
 
-  const dataToSend = [];
-
-  if (contributions.length > 0) {
-    dataToSend.push(...contributions);
-  }
-  if (expenses.length > 0) {
-    dataToSend.push(...expenses);
-  }
-
-  if (dataToSend.length > 0) {
-    fetch(sheetURL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToSend),
-    })
-    .then(response => response.text())
-    .then(result => console.log(result))
-    .catch(error => console.error('Error sending data to sheet:', error));
-  } else {
-    console.log('No data to send.');
-  }
-}
-    </script>
+    window.deleteExpense = function(index) {
+      expenses.splice(index, 1);
+      saveExpenses();
+      renderExpenses();
+      updateBalance();
+    }
+  </script>
 </body>
 </html>
