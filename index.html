@@ -276,37 +276,34 @@
                 return saved ? JSON.parse(saved) : [];
             }
 
-            function sendToSheet(data) {
-                fetch(sheetURL, {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(res => res.text())
-                .then(msg => console.log("Sheet response:", msg))
-                .catch(err => console.error("Sheet error:", err));
-            }
+            function sendToSheet() {
+  const contributions = JSON.stringify(contributionsData);
+  const expenses = JSON.stringify(expensesData);
 
-            function setToday(inputId) {
-                document.getElementById(inputId).value = new Date().toISOString().split('T')[0];
-            }
+  const dataToSend = [];
 
-            window.deleteContribution = function(index) {
-                contributions.splice(index, 1);
-                save('clubContributions', contributions);
-                renderContributions();
-                updateBalance();
-            };
+  if (contributions.length > 0) {
+    dataToSend.push(...contributions);
+  }
+  if (expenses.length > 0) {
+    dataToSend.push(...expenses);
+  }
 
-            window.deleteExpense = function(index) {
-                expenses.splice(index, 1);
-                save('clubExpenses', expenses);
-                renderExpenses();
-                updateBalance();
-            };
-        });
+  if (dataToSend.length > 0) {
+    fetch(sheetURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSend),
+    })
+    .then(response => response.text())
+    .then(result => console.log(result))
+    .catch(error => console.error('Error sending data to sheet:', error));
+  } else {
+    console.log('No data to send.');
+  }
+}
     </script>
 </body>
 </html>
