@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contribution & Expense Tracker</title>
+  <base target="_top">
   <style>
     body {
       font-family: sans-serif;
@@ -13,36 +14,47 @@
       margin: auto;
       padding: 1em;
     }
+    h1, h2 {
+       color: #0056b3;
+    }
     h2 {
       border-bottom: 2px solid #ccc;
       padding-bottom: 0.2em;
     }
-    form {
+    form, .entry-section {
       margin-bottom: 2em;
       background: #fff;
-      padding: 1em;
+      padding: 1em 1.5em; /* Added more horizontal padding */
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Slightly enhanced shadow */
     }
     label {
       display: block;
       margin-top: 1em;
+      font-weight: bold; /* Make labels bolder */
+      color: #555;
     }
     input, select {
-      padding: 0.5em;
+      padding: 0.8em; /* Increased padding */
       width: 100%;
       margin-top: 0.5em;
       border: 1px solid #ccc;
       border-radius: 4px;
+      box-sizing: border-box; /* Include padding and border in width */
     }
+     input[type="date"] {
+        /* Specific styling for date inputs if needed */
+     }
     button {
-      margin-top: 1em;
-      padding: 0.7em 1.5em;
+      margin-top: 1.5em; /* More space before button */
+      padding: 0.8em 1.8em;
       background: #007bff;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 1em; /* Slightly larger font */
+      transition: background-color 0.2s ease; /* Smooth hover transition */
     }
     button:hover {
       background: #0056b3;
@@ -50,26 +62,63 @@
     .entry-section {
       margin-top: 3em;
     }
-    .summary {
+     .summary, .entry-section {
       background: #e6f7ff;
       border-left: 5px solid #007bff;
-      padding: 1em;
+      padding: 1.5em; /* More padding */
       margin-top: 2em;
       border-radius: 5px;
+     }
+     .summary p {
+        margin: 0.8em 0; /* More spacing in summary */
+        font-size: 1.1em;
+     }
+     .summary strong {
+        min-width: 150px; /* Align values */
+        display: inline-block;
+     }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1em;
     }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 0.8em;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    tr:nth-child(even) {
+       background-color: #f9f9f9;
+    }
+     #loading-indicator, #status-message {
+         margin-top: 1em;
+         font-style: italic;
+         color: #666;
+         text-align: center;
+     }
+      #status-message.success { color: green; }
+      #status-message.error { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>Salad Club Tracker</h1>
 
+  <div id="status-message"></div>
+  <div id="loading-indicator" style="display: none;">Loading data...</div>
+
+
   <div class="summary">
     <h2>Summary</h2>
-    <p><strong>Total Contributions:</strong> ₹<span id="total-contributions">0</span></p>
-    <p><strong>Total Expenses:</strong> ₹<span id="total-expenses">0</span></p>
-    <p><strong>Balance:</strong> ₹<span id="balance">0</span></p>
+    <p><strong>Total Contributions:</strong> ₹<span id="total-contributions">0.00</span></p>
+    <p><strong>Total Expenses:</strong> ₹<span id="total-expenses">0.00</span></p>
+    <p><strong>Balance:</strong> ₹<span id="balance">0.00</span></p>
   </div>
 
-  <h2>Contributions</h2>
+  <h2>Add Contribution</h2>
   <form id="contribution-form">
     <label>Date:
       <input type="date" id="contribution-date" required />
@@ -82,98 +131,273 @@
         <option>Zuneira</option>
         <option>Massarat</option>
         <option>Faisal</option>
-      </select>
+         </select>
     </label>
     <label>Amount (₹):
-      <input type="number" id="contribution-amount" step="0.01" required />
+      <input type="number" id="contribution-amount" step="0.01" min="0.01" required />
     </label>
     <button type="submit">Add Contribution</button>
   </form>
 
-  <h2>Expenses</h2>
+  <h2>Add Expense</h2>
   <form id="expense-form">
     <label>Date:
       <input type="date" id="expense-date" required />
     </label>
-    <label>Booked By :
+    <label>Booked By (Suhail/Faisal only):
       <select id="expense-booker" required>
         <option value="">Select</option>
         <option>Suhail</option>
         <option>Faisal</option>
-      </select>
+         </select>
     </label>
     <label>Item Description:
       <input type="text" id="expense-item" required />
     </label>
     <label>Amount (₹):
-      <input type="number" id="expense-amount" step="0.01" required />
+      <input type="number" id="expense-amount" step="0.01" min="0.01" required />
     </label>
     <button type="submit">Add Expense</button>
   </form>
 
+  <div class="entry-section">
+       <h2>Contributions Log</h2>
+       <div id="contributions-list">
+          <table>
+             <thead>
+                <tr><th>Date</th><th>Contributor</th><th>Amount (₹)</th></tr>
+             </thead>
+             <tbody id="contributions-table-body">
+                </tbody>
+          </table>
+       </div>
+   </div>
+
+   <div class="entry-section">
+       <h2>Expenses Log</h2>
+       <div id="expenses-list">
+           <table>
+             <thead>
+               <tr><th>Date</th><th>Booked By</th><th>Item</th><th>Amount (₹)</th></tr>
+             </thead>
+             <tbody id="expenses-table-body">
+                </tbody>
+          </table>
+       </div>
+   </div>
+
+
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwrcsNKChm3AeX6d71qBMJskRem67amoB7yxmMSPuc7/dev';
+    // --- Global variables for summary ---
+    let allRecords = []; // Store all records fetched from the sheet
 
-    let totalContributions = 0;
-    let totalExpenses = 0;
+    // --- DOM Elements ---
+    const contributionForm = document.getElementById('contribution-form');
+    const expenseForm = document.getElementById('expense-form');
+    const totalContributionsEl = document.getElementById('total-contributions');
+    const totalExpensesEl = document.getElementById('total-expenses');
+    const balanceEl = document.getElementById('balance');
+    const contributionsTableBody = document.getElementById('contributions-table-body');
+    const expensesTableBody = document.getElementById('expenses-table-body');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const statusMessageEl = document.getElementById('status-message');
 
-    function updateSummary() {
-      document.getElementById('total-contributions').textContent = totalContributions.toFixed(2);
-      document.getElementById('total-expenses').textContent = totalExpenses.toFixed(2);
-      document.getElementById('balance').textContent = (totalContributions - totalExpenses).toFixed(2);
+
+    // --- Functions ---
+
+    function showLoading(isLoading) {
+       loadingIndicator.style.display = isLoading ? 'block' : 'none';
     }
 
-    document.getElementById('contribution-form').addEventListener('submit', e => {
-      e.preventDefault();
-      const amount = parseFloat(document.getElementById('contribution-amount').value);
-      const data = {
-        type: 'contribution',
-        date: document.getElementById('contribution-date').value,
-        name: document.getElementById('contributor').value,
-        item: '',
-        amount: amount
-      };
-      sendToSheet(data);
-      totalContributions += amount;
-      updateSummary();
-      e.target.reset();
-    });
+     function showStatus(message, isError = false) {
+        statusMessageEl.textContent = message;
+        statusMessageEl.className = isError ? 'error' : 'success';
+        // Clear message after a few seconds
+        setTimeout(() => {
+           statusMessageEl.textContent = '';
+           statusMessageEl.className = '';
+        }, 5000); // Hide after 5 seconds
+     }
 
-    document.getElementById('expense-form').addEventListener('submit', e => {
-      e.preventDefault();
-      const amount = parseFloat(document.getElementById('expense-amount').value);
-      const data = {
-        type: 'expense',
-        date: document.getElementById('expense-date').value,
-        name: document.getElementById('expense-booker').value,
-        item: document.getElementById('expense-item').value,
-        amount: amount
-      };
-      sendToSheet(data);
-      totalExpenses += amount;
-      updateSummary();
-      e.target.reset();
-    });
-
-    function sendToSheet(data) {
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
+    function formatDate(dateString) {
+        // Handles both Date objects and YYYY-MM-DD strings
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+             // Add time zone offset to prevent date shifting
+             const offset = date.getTimezoneOffset() * 60000;
+             const correctedDate = new Date(date.getTime() + offset);
+            return correctedDate.toLocaleDateString('en-IN'); // Use Indian date format or 'en-CA' for YYYY-MM-DD
+        } catch (e) {
+            console.error("Error formatting date:", dateString, e);
+            return dateString; // Return original if formatting fails
         }
-      })
-      .then(res => res.text())
-      .then(text => console.log('Success:', text))
-      .catch(err => console.error('Error sending data:', err));
     }
 
+
+    function updateDisplay() {
+        let totalContributions = 0;
+        let totalExpenses = 0;
+
+        // Clear existing table rows
+        contributionsTableBody.innerHTML = '';
+        expensesTableBody.innerHTML = '';
+
+         // Sort records by date (descending - newest first) - Ensure dates are valid Date objects for sorting
+         const sortedRecords = allRecords
+            .map(r => ({ ...r, dateObj: new Date(r.date) })) // Create Date object for sorting
+            .sort((a, b) => b.dateObj - a.dateObj); // Sort descending
+
+
+        sortedRecords.forEach(record => {
+           const amount = parseFloat(record.amount) || 0; // Ensure amount is a number
+
+           // Format the date from the record for display
+           const displayDate = formatDate(record.date); // Use the date from the record
+
+           if (record.type === 'contribution' && amount > 0) {
+               totalContributions += amount;
+               const row = contributionsTableBody.insertRow();
+               row.innerHTML = `<td><span class="math-inline">\{displayDate\}</td\><td\></span>{record.name}</td><td>${amount.toFixed(2)}</td>`;
+           } else if (record.type === 'expense' && amount > 0) {
+               totalExpenses += amount;
+               const row = expensesTableBody.insertRow();
+               row.innerHTML = `<td><span class="math-inline">\{displayDate\}</td\><td\></span>{record.name}</td><td><span class="math-inline">\{record\.item\}</td\><td\></span>{amount.toFixed(2)}</td>`;
+           }
+        });
+
+        // Update summary
+        totalContributionsEl.textContent = totalContributions.toFixed(2);
+        totalExpensesEl.textContent = totalExpenses.toFixed(2);
+        balanceEl.textContent = (totalContributions - totalExpenses).toFixed(2);
+    }
+
+
+    function handleFormSubmit(e, type) {
+      e.preventDefault(); // Prevent default form submission
+      showLoading(true);
+      statusMessageEl.textContent = 'Submitting...'; // Provide immediate feedback
+      statusMessageEl.className = '';
+
+
+      let data = {};
+      let amount = 0;
+      let form;
+
+      if (type === 'contribution') {
+        form = contributionForm;
+        amount = parseFloat(document.getElementById('contribution-amount').value);
+        data = {
+          type: 'contribution',
+          date: document.getElementById('contribution-date').value,
+          name: document.getElementById('contributor').value,
+          item: '', // No item for contributions
+          amount: amount
+        };
+      } else { // type === 'expense'
+        form = expenseForm;
+        amount = parseFloat(document.getElementById('expense-amount').value);
+        data = {
+          type: 'expense',
+          date: document.getElementById('expense-date').value,
+          name: document.getElementById('expense-booker').value,
+          item: document.getElementById('expense-item').value,
+          amount: amount
+        };
+      }
+
+       // Basic validation
+       if (!data.date || !data.name || !data.amount || (type === 'expense' && !data.item)) {
+           showStatus("Please fill in all required fields.", true);
+           showLoading(false);
+           return; // Stop submission
+       }
+       if (isNaN(amount) || amount <= 0) {
+           showStatus("Please enter a valid positive amount.", true);
+            showLoading(false);
+           return; // Stop submission
+       }
+
+
+      // Use google.script.run to call the Apps Script function
+      google.script.run
+        .withSuccessHandler(response => {
+          showLoading(false);
+          try {
+             const result = JSON.parse(response); // Parse the JSON response from Apps Script
+             if (result.status === "success") {
+                showStatus(`${type.charAt(0).toUpperCase() + type.slice(1)} added successfully!`);
+                 // Add the new record to our local array and update display
+                 allRecords.push(result.addedData);
+                 updateDisplay(); // Refresh summary and tables
+                 form.reset(); // Reset the form fields
+                 // Reset date fields to today after submission
+                 const today = new Date().toISOString().split('T')[0];
+                 document.getElementById('contribution-date').value = today;
+                 document.getElementById('expense-date').value = today;
+             } else {
+                 showStatus(`Error adding record: ${result.message}`, true);
+                 console.error("Server returned error:", result.message);
+             }
+          } catch (parseError) {
+              showStatus("Received an unexpected response from the server.", true);
+              console.error("Error parsing server response:", parseError, response);
+          }
+        })
+        .withFailureHandler(error => {
+          showLoading(false);
+          showStatus(`Failed to submit ${type}: ${error.message}`, true);
+          console.error(`Error calling server function for ${type}:`, error);
+        })
+        .addRecord(data); // Call the 'addRecord' function in Code.gs
+    }
+
+
+     function loadInitialData() {
+        showLoading(true);
+        showStatus("Loading existing records...");
+         google.script.run
+            .withSuccessHandler(response => {
+               showLoading(false);
+               try {
+                   const result = JSON.parse(response);
+                   if (result.status === "success") {
+                       allRecords = result.records || []; // Store fetched records
+                       updateDisplay(); // Update summary and tables
+                       showStatus("Records loaded.", false); // Show brief success
+                   } else {
+                       showStatus(`Error loading records: ${result.message}`, true);
+                       console.error("Server error loading records:", result.message);
+                   }
+               } catch (parseError) {
+                   showStatus("Received an unexpected response when loading data.", true);
+                   console.error("Error parsing load response:", parseError, response);
+               }
+            })
+            .withFailureHandler(error => {
+               showLoading(false);
+               showStatus(`Failed to load records: ${error.message}`, true);
+               console.error("Error calling getRecords:", error);
+            })
+            .getRecords(); // Call the 'getRecords' function in Code.gs
+     }
+
+
+    // --- Event Listeners ---
+    contributionForm.addEventListener('submit', (e) => handleFormSubmit(e, 'contribution'));
+    expenseForm.addEventListener('submit', (e) => handleFormSubmit(e, 'expense'));
+
+    // --- Initialisation ---
     document.addEventListener('DOMContentLoaded', () => {
+      // Set default dates to today
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('contribution-date').value = today;
       document.getElementById('expense-date').value = today;
-      updateSummary();
+
+      // Load existing records from the sheet when the page loads
+      loadInitialData();
     });
+
   </script>
 </body>
 </html>
