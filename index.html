@@ -4,16 +4,104 @@
     <meta charset="UTF-8">
     <title>Club Fund Manager</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h2 { margin-top: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        input[type="text"], input[type="number"], input[type="date"] {
-            width: 90%; padding: 5px;
+        :root {
+            --primary: #4cafaa;
+            --secondary: #f0f8f8;
+            --accent: #dff6f0;
+            --danger: #ff4d4d;
+            --text-dark: #333;
+            --text-light: #fff;
+            --border-color: #ccc;
         }
-        .delete-btn { background: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer; }
-        .add-btn, .submit-btn { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f6fdfc;
+            color: var(--text-dark);
+            padding: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1, h2 {
+            color: var(--primary);
+        }
+
+        label {
+            display: inline-block;
+            margin: 5px 15px 10px 0;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"] {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: var(--secondary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: var(--text-light);
+        }
+
+        tr:hover {
+            background-color: var(--accent);
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: var(--text-light);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn, .submit-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .add-btn:hover, .submit-btn:hover {
+            background-color: #3a9a96;
+        }
+
+        .summary {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #222;
+        }
+
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                font-size: 14px;
+            }
+
+            input, button {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -34,7 +122,7 @@
         </thead>
         <tbody id="contributions-body"></tbody>
     </table>
-    <p><strong>Total Contributions:</strong> <span id="total-contributions">₹0.00</span></p>
+    <p class="summary"><strong>Total Contributions:</strong> <span id="total-contributions">₹0.00</span></p>
 
     <h2>Add Multiple Expenses</h2>
     <table>
@@ -53,56 +141,48 @@
         </thead>
         <tbody id="expenses-body"></tbody>
     </table>
-    <p><strong>Total Expenses:</strong> <span id="total-expenses">₹0.00</span></p>
+    <p class="summary"><strong>Total Expenses:</strong> <span id="total-expenses">₹0.00</span></p>
 
     <h2>Balance</h2>
-    <p><strong>Remaining Balance:</strong> <span id="balance">₹0.00</span></p>
+    <p class="summary"><strong>Remaining Balance:</strong> <span id="balance">₹0.00</span></p>
 
     <script>
-        const sheetURL = "https://script.google.com/macros/s/AKfycbxxxxxx.../exec"; // ✅ Replace with your Web App URL
+        const sheetURL = "https://script.google.com/macros/s/AKfycbxxxxxx.../exec"; // Replace with your live URL
 
         document.addEventListener('DOMContentLoaded', () => {
-            const contributionForm = document.getElementById('contribution-form');
             const contributionsBody = document.getElementById('contributions-body');
             const expensesBody = document.getElementById('expenses-body');
             const totalContributionsDisplay = document.getElementById('total-contributions');
             const totalExpensesDisplay = document.getElementById('total-expenses');
             const balanceDisplay = document.getElementById('balance');
             const multiExpenseBody = document.getElementById('multi-expense-body');
-            const addRowBtn = document.getElementById('add-expense-row');
-            const submitAllBtn = document.getElementById('submit-all-expenses');
+            const contributionForm = document.getElementById('contribution-form');
 
-            let contributions = loadContributions();
-            let expenses = loadExpenses();
+            let contributions = load('clubContributions');
+            let expenses = load('clubExpenses');
 
-            setDefaultDates();
             renderContributions();
             renderExpenses();
             updateBalance();
-
-            function setDefaultDates() {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('contribution-date').value = today;
-            }
+            setToday('contribution-date');
 
             contributionForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const contributor = document.getElementById('contributor').value;
                 const date = document.getElementById('contribution-date').value;
                 const amount = parseFloat(document.getElementById('contribution-amount').value);
-                const newContribution = { date, contributor, amount };
 
-                contributions.push(newContribution);
-                saveContributions();
+                const newEntry = { date, contributor, amount };
+                contributions.push(newEntry);
+                save('clubContributions', contributions);
                 renderContributions();
                 updateBalance();
                 contributionForm.reset();
-                setDefaultDates();
-
-                sendToSheet([newContribution]);
+                setToday('contribution-date');
+                sendToSheet([newEntry]);
             });
 
-            addRowBtn.addEventListener('click', () => {
+            document.getElementById('add-expense-row').addEventListener('click', () => {
                 const today = new Date().toISOString().split('T')[0];
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -121,30 +201,29 @@
                 }
             });
 
-            submitAllBtn.addEventListener('click', () => {
+            document.getElementById('submit-all-expenses').addEventListener('click', () => {
                 const rows = multiExpenseBody.querySelectorAll('tr');
                 const newExpenses = [];
 
                 rows.forEach(row => {
-                    const inputs = row.querySelectorAll('input');
-                    const date = inputs[0].value;
-                    const item = inputs[1].value;
-                    const quantity = parseFloat(inputs[2].value);
-                    const unitPrice = parseFloat(inputs[3].value);
+                    const [dateInput, itemInput, qtyInput, unitPriceInput] = row.querySelectorAll('input');
+                    const date = dateInput.value;
+                    const item = itemInput.value;
+                    const quantity = parseFloat(qtyInput.value);
+                    const unitPrice = parseFloat(unitPriceInput.value);
 
                     if (!date || !item || isNaN(quantity) || isNaN(unitPrice)) return;
 
                     const totalCost = quantity * unitPrice;
-                    const newExpense = { date, item, quantity, unitPrice, totalCost };
-                    expenses.push(newExpense);
-                    newExpenses.push(newExpense);
+                    const entry = { date, item, quantity, unitPrice, totalCost };
+                    expenses.push(entry);
+                    newExpenses.push(entry);
                 });
 
-                saveExpenses();
+                save('clubExpenses', expenses);
                 renderExpenses();
                 updateBalance();
                 multiExpenseBody.innerHTML = '';
-
                 sendToSheet(newExpenses);
             });
 
@@ -185,32 +264,22 @@
             function updateBalance() {
                 const totalContributions = contributions.reduce((sum, c) => sum + c.amount, 0);
                 const totalExpenses = expenses.reduce((sum, e) => sum + e.totalCost, 0);
-                const balance = totalContributions - totalExpenses;
-                balanceDisplay.textContent = `₹${balance.toFixed(2)}`;
+                balanceDisplay.textContent = `₹${(totalContributions - totalExpenses).toFixed(2)}`;
             }
 
-            function saveContributions() {
-                localStorage.setItem('clubContributions', JSON.stringify(contributions));
+            function save(key, data) {
+                localStorage.setItem(key, JSON.stringify(data));
             }
 
-            function loadContributions() {
-                const stored = localStorage.getItem('clubContributions');
-                return stored ? JSON.parse(stored) : [];
+            function load(key) {
+                const saved = localStorage.getItem(key);
+                return saved ? JSON.parse(saved) : [];
             }
 
-            function saveExpenses() {
-                localStorage.setItem('clubExpenses', JSON.stringify(expenses));
-            }
-
-            function loadExpenses() {
-                const stored = localStorage.getItem('clubExpenses');
-                return stored ? JSON.parse(stored) : [];
-            }
-
-            function sendToSheet(dataArray) {
+            function sendToSheet(data) {
                 fetch(sheetURL, {
                     method: 'POST',
-                    body: JSON.stringify(dataArray),
+                    body: JSON.stringify(data),
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -220,16 +289,20 @@
                 .catch(err => console.error("Sheet error:", err));
             }
 
+            function setToday(inputId) {
+                document.getElementById(inputId).value = new Date().toISOString().split('T')[0];
+            }
+
             window.deleteContribution = function(index) {
                 contributions.splice(index, 1);
-                saveContributions();
+                save('clubContributions', contributions);
                 renderContributions();
                 updateBalance();
             };
 
             window.deleteExpense = function(index) {
                 expenses.splice(index, 1);
-                saveExpenses();
+                save('clubExpenses', expenses);
                 renderExpenses();
                 updateBalance();
             };
