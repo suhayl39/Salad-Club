@@ -50,10 +50,24 @@
     .entry-section {
       margin-top: 3em;
     }
+    .summary {
+      background: #e6f7ff;
+      border-left: 5px solid #007bff;
+      padding: 1em;
+      margin-top: 2em;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
   <h1>Salad Club Tracker</h1>
+
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Total Contributions:</strong> ₹<span id="total-contributions">0</span></p>
+    <p><strong>Total Expenses:</strong> ₹<span id="total-expenses">0</span></p>
+    <p><strong>Balance:</strong> ₹<span id="balance">0</span></p>
+  </div>
 
   <h2>Contributions</h2>
   <form id="contribution-form">
@@ -81,7 +95,7 @@
     <label>Date:
       <input type="date" id="expense-date" required />
     </label>
-    <label>Booked By (Suhail/Faisal only):
+    <label>Booked By :
       <select id="expense-booker" required>
         <option value="">Select</option>
         <option>Suhail</option>
@@ -98,30 +112,46 @@
   </form>
 
   <script>
-    const scriptURL = https://script.google.com/macros/s/AKfycbyURdJfEaiJRbj_Ut4WXjrDA-lPjLFg4D0-zIXEe9bvbjorlLGNnoSKi8VE0nsCWSW3yQ/exec;
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwrcsNKChm3AeX6d71qBMJskRem67amoB7yxmMSPuc7/dev';
+
+    let totalContributions = 0;
+    let totalExpenses = 0;
+
+    function updateSummary() {
+      document.getElementById('total-contributions').textContent = totalContributions.toFixed(2);
+      document.getElementById('total-expenses').textContent = totalExpenses.toFixed(2);
+      document.getElementById('balance').textContent = (totalContributions - totalExpenses).toFixed(2);
+    }
 
     document.getElementById('contribution-form').addEventListener('submit', e => {
       e.preventDefault();
+      const amount = parseFloat(document.getElementById('contribution-amount').value);
       const data = {
         type: 'contribution',
         date: document.getElementById('contribution-date').value,
         name: document.getElementById('contributor').value,
-        amount: document.getElementById('contribution-amount').value
+        item: '',
+        amount: amount
       };
       sendToSheet(data);
+      totalContributions += amount;
+      updateSummary();
       e.target.reset();
     });
 
     document.getElementById('expense-form').addEventListener('submit', e => {
       e.preventDefault();
+      const amount = parseFloat(document.getElementById('expense-amount').value);
       const data = {
         type: 'expense',
         date: document.getElementById('expense-date').value,
         name: document.getElementById('expense-booker').value,
         item: document.getElementById('expense-item').value,
-        amount: document.getElementById('expense-amount').value
+        amount: amount
       };
       sendToSheet(data);
+      totalExpenses += amount;
+      updateSummary();
       e.target.reset();
     });
 
@@ -133,14 +163,16 @@
           'Content-Type': 'application/json'
         }
       })
-      .then(res => alert('Entry recorded!'))
-      .catch(err => alert('Error sending data'));
+      .then(res => res.text())
+      .then(text => console.log('Success:', text))
+      .catch(err => console.error('Error sending data:', err));
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('contribution-date').value = today;
       document.getElementById('expense-date').value = today;
+      updateSummary();
     });
   </script>
 </body>
